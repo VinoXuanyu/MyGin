@@ -1,5 +1,5 @@
-module MyGin
+module demo
 
-require gee v0.0.0
-replace gee => ./gee
+require jin v0.0.0
+replace jin => ./jin
 go 1.16
