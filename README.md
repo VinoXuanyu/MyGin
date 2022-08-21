@@ -75,9 +75,9 @@ Group routes with certain prefix to maintain well-formed API style.
 ``` 
 func main() {
 	r := jin.New()
-	v1 := r.Group("/api/v1")
+	group1 := r.Group("/api/group1")
 	{
-		v1.GET("/", func(c *jin.Context) {
+		group1.GET("/", func(c *jin.Context) {
 			c.String(http.StatusOK, "Hi. This is API Version 1.")
 		})
 	}

@@ -3,29 +3,68 @@ package main
 import (
 	"fmt"
 	"jin"
-	"log"
 	"math"
 	"net/http"
 	"strconv"
 )
 
-// demo
-func onlyForV2() jin.HandlerFunc {
-	return func(c *jin.Context) {
-		log.Printf("V2 middleware working !")
-	}
-}
-
 func main() {
-	engine := jin.Default()
-	engine.GET("/panic", func(c *jin.Context) {
-		var a int
-		slice := make([]int, 0)
-		a = slice[100]
-		fmt.Println(a)
+	// Initialize a handler Engine
+	engine := jin.New()
+
+	// Register middlewares
+	engine.Use(jin.Logger())   // Logs every request and it's time cost
+	engine.Use(jin.Recovery()) // Avoid program shut down when Internal Server Error occurs
+
+	// Register static route (only GET & POST supported by now)
+	engine.GET("/admin/healthz", func(c *jin.Context) {
+		c.String(http.StatusOK, "Welcome, this is Jin!") // Wraps string type response
 	})
 
-	engine.GET("/stress", func(c *jin.Context) {
+	engine.POST("/admin/healthz", func(c *jin.Context) {
+		// Parse forms easily!
+		val1 := c.PostForm("k1")
+		val2 := c.PostForm("k2")
+		// Wraps JSON type response
+		c.JSON(http.StatusOK, jin.H{
+			"This is v for k1": val1,
+			"This is v for k2": val2,
+		})
+	})
+
+	// Register dynamic route(':' to match single word and '*' to match all the resting parts)
+	engine.GET("/api/hi/:name", func(c *jin.Context) {
+		c.String(http.StatusOK, "Hi, This is %s", c.Param("name"))
+	})
+
+	// Route Grouping (groups share same prefix and also middlewares are segregated on group level)
+	group1 := engine.Group("/api/group1")
+	{
+		group1.POST("/", func(c *jin.Context) {
+			c.String(http.StatusOK, "Welcome, API Version 1!") //
+		})
+	}
+
+	// Group nesting is also supported where prefixes are concatenated
+	group2 := group1.Group("/nest")
+	{
+		group2.GET("/", func(c *jin.Context) {
+			c.String(http.StatusOK, "This is a test for GET method in nested grouping")
+		})
+		group2.POST("/", func(c *jin.Context) {
+			c.String(http.StatusOK, "This is a test for POST method in nested grouping")
+		})
+	}
+
+	// Programme won't crash since we've registered Recovery middleware
+	engine.GET("/admin/middleware-test", func(c *jin.Context) {
+		var a []int
+		fmt.Println("If you are seeing this something is wrong")
+		fmt.Println(a[100])
+	})
+
+	// This is a test for performance of Golang
+	engine.GET("/admin/stress-test", func(c *jin.Context) {
 		temp := 0
 		for i := 0; i < math.MaxInt32; i++ {
 			temp += i
@@ -33,36 +72,6 @@ func main() {
 		c.String(http.StatusOK, strconv.Itoa(temp))
 	})
 
-	v1 := engine.Group("/v1")
-	{
-		v1.GET("/hello", func(c *jin.Context) {
-			c.String(http.StatusOK, "Hello %s, you are at %s", c.Query("name"), c.Path)
-		})
-		v1.GET("/hello/:name", func(c *jin.Context) {
-			c.String(http.StatusOK, "Hello %s, it's %s", c.Param("name"), c.Path)
-		})
-	}
-
-	v2 := engine.Group("/v2")
-	v2.Use(onlyForV2())
-	{
-		v2.POST("/login", func(c *jin.Context) {
-			c.JSON(http.StatusOK, jin.H{
-				"username": c.PostForm("username"),
-				"password": c.PostForm("password"),
-			})
-		})
-	}
-
-	v3 := v2.Group("/nest")
-	{
-		v3.GET("/", func(c *jin.Context) {
-			c.String(http.StatusOK, "This is a test for nested grouping")
-		})
-		v3.GET("/:name", func(c *jin.Context) {
-			c.String(http.StatusOK, "Hi, %s", c.Param("name"))
-		})
-	}
 	engine.Run(":9999")
 
 }
