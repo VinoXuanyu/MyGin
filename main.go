@@ -59,8 +59,8 @@ func main() {
 	// Programme won't crash since we've registered Recover middleware
 	engine.GET("/admin/middleware-test", func(c *jin.Context) {
 		var a []int
-		fmt.Println("If you are seeing this something is wrong")
 		fmt.Println(a[100])
+		fmt.Println("If you are seeing this, something is wrong")
 	})
 
 	// This is a test for performance of Golang

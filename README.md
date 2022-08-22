@@ -100,6 +100,7 @@ func main() {
 
 ### Middlewares
 Add middlewares to avoid duplicate codes like recording request metrics, logging, authing....
+- Logger to record every request
 ``` 
 func main() {
 	r := jin.New()
@@ -108,4 +109,14 @@ func main() {
 		c.HTML(http.StatusOK, "<h1>Hello jin</h1>")
 	})
 
+```
+- Recover to avoid programme crash 
+```
+func main() {
+    r := jin.New()
+	r.GET("/admin/middleware-test", func(c *jin.Context) {
+		var a []int
+		fmt.Println(a[100])
+		fmt.Println("If you are seeing this, something is wrong")
+	})
 ```
