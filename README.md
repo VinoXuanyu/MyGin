@@ -10,7 +10,9 @@ let's take a quick look on how to start a http service with `net/http` in Go,
 which provides basic functionality of listening ports, mapping of static routes, and parsing HTTP requests,
 but those are not enough for developing apps efficiently, we need some fancy things
 like dynamic routing to capture certain params, middlewares to reduce duplicate code snippets,
-and support for HTML templates 
+and support for HTML templates, so here comes Jin!
+
+e.g. start a web service with `net/http`
 ```
 func main() {
     http.HandleFunc("/", handler)
@@ -34,8 +36,12 @@ func main() {
 }
 ```
 ## Features
-### Context 
+### All in Context 
 Provide uniformed way to parse requests and respond.
+- To parse GET request, use jin.Context.Param(key string), 
+- To parse POST request, use jin.Context.PostForm(key string)
+- JSON, HTML, String, and raw binary responses are wrapped by jin.Context.JSON(), jin.Context.HTML()...
+
 e.g. parse POST request and return JSON data 
 
 - Without context
@@ -53,7 +59,7 @@ if err := encoder.Encode(obj); err != nil {
 ```
 - With context 
 ``` 
-c.JSON(http.StatusOK, jin.H{
+c.JSON(http.StatusOK, map[string]interface{}{
     "jin": c.PostForm("jin"),
     "jinjin": c.PostForm("jinjin"),
 })
@@ -75,13 +81,13 @@ Group routes with certain prefix to maintain well-formed API style.
 ``` 
 func main() {
 	r := jin.New()
-	group1 := r.Group("/api/group1")
+	group1 := r.Group("/api/v1/")
 	{
 		group1.GET("/", func(c *jin.Context) {
 			c.String(http.StatusOK, "Hi. This is API Version 1.")
 		})
 	}
-	v2 := r.Group("/api/v2")
+	v2 := r.Group("/api/v2/")
 	{
 		v2.GET("/", func(c *jin.Context) {
 			c.String(http.StatusOK, "Hi. This is API Version 2.")

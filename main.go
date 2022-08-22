@@ -13,18 +13,18 @@ func main() {
 	engine := jin.New()
 
 	// Register middlewares
-	engine.Use(jin.Logger())   // Logs every request and it's time cost
-	engine.Use(jin.Recovery()) // Avoid program shut down when Internal Server Error occurs
+	engine.Use(jin.Log())     // Logs every request and it's time cost
+	engine.Use(jin.Recover()) // Avoid program shut down when Internal Server Error occurs
 
 	// Register static route (only GET & POST supported by now)
-	engine.GET("/admin/healthz", func(c *jin.Context) {
-		c.String(http.StatusOK, "Welcome, this is Jin!") // Wraps string type response
+	engine.GET("/", func(ctx *jin.Context) {
+		ctx.HTML(http.StatusOK, "css.tmpl", nil)
 	})
 
-	engine.POST("/admin/healthz", func(c *jin.Context) {
+	engine.POST("/", func(c *jin.Context) {
 		// Parse forms easily!
-		val1 := c.PostForm("k1")
-		val2 := c.PostForm("k2")
+		val1 := c.Form("k1")
+		val2 := c.Form("k2")
 		// Wraps JSON type response
 		c.JSON(http.StatusOK, jin.H{
 			"This is v for k1": val1,
@@ -56,7 +56,7 @@ func main() {
 		})
 	}
 
-	// Programme won't crash since we've registered Recovery middleware
+	// Programme won't crash since we've registered Recover middleware
 	engine.GET("/admin/middleware-test", func(c *jin.Context) {
 		var a []int
 		fmt.Println("If you are seeing this something is wrong")
